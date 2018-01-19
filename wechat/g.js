@@ -6,6 +6,7 @@ const util = require('./util');
 module.exports = function (ops) {
     let wechat = new Wechat(ops);
     return function* (next) {
+        let that = this;
         let token = ops.token;
         let signature = this.query.signature;
         let nonce = this.query.nonce;
@@ -31,13 +32,26 @@ module.exports = function (ops) {
                     limit: '1mb',
                     encoding: this.charset
                 });
-                console.log(data.toString());
-
-                var content = yield util.parseXMLAsync(data);
-                console.log(content);
-
-                var message = util.formatMessage(content.xml);
+                let content = yield util.parseXMLAsync(data);
+                let message = util.formatMessage(content.xml);
+                console.log('message');
                 console.log(message);
+                if (message.MsgType === 'event') {
+                    if (message.Event === 'subscribe') {
+                        console.log('debugger line-----')
+                        let now = new Date().getTime();
+                        let backMessage = 'ennnn, 。。。。。';
+                        that.status = 200;
+                        that.type = 'application/xml';
+                        that.body = '<xml>\n' +
+'                                        <ToUserName><![CDATA[' + message.FromUserName + ']]></ToUserName>\n' +
+'                                        <FromUserName><![CDATA[' + message.ToUserName + ']]></FromUserName>\n' +
+'                                        <CreateTime>' + now + '</CreateTime>\n' +
+'                                        <MsgType><![CDATA[text]]></MsgType>\n' +
+'                                        <Content><![CDATA['+ backMessage + ']]></Content>\n' +
+'                                    </xml>';
+                    }
+                }
             }
         }
     }
